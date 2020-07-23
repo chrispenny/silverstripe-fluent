@@ -179,6 +179,7 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
         }
 
         $this->updateModifiedFlag($flags);
+        $this->updateArchivedFlag($flags);
         $this->updateNoSourceFlag($flags);
 
         // If this page does not exist it should be "invisible"
@@ -229,6 +230,9 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
 
         // Update unpublish and archive actions
         $this->updateMoreOptionsActions($actions);
+
+        // restore action needs to be removed if current locale was never archived
+        $this->updateRestoreAction($actions);
 
         // Add extra fluent menu
         $this->updateFluentActions($actions, $this->owner);
@@ -491,6 +495,24 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
     }
 
     /**
+     * Restore action needs to be removed if there is no version to revert to
+     *
+     * @param FieldList $actions
+     */
+    protected function updateRestoreAction(FieldList $actions): void
+    {
+        if ($this->owner->existsInLocale()) {
+            return;
+        }
+
+        if ($this->owner->hasArchiveInLocale()) {
+            return;
+        }
+
+        $actions->removeByName('action_restore');
+    }
+
+    /**
      * Remove "copy to draft" and "copy & publish" actions based on configuration
      *
      * @param FieldList $actions
@@ -573,6 +595,30 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
         }
 
         unset($flags['modified']);
+    }
+
+    /**
+     * Localise archived flag - remove archived flag if there is content on other locales
+     *
+     * @param array $flags
+     */
+    protected function updateArchivedFlag(array &$flags): void
+    {
+        if (!array_key_exists('archived', $flags)) {
+            return;
+        }
+
+        $locale = FluentState::singleton()->getLocale();
+
+        if (!$locale) {
+            return;
+        }
+
+        if (count($this->owner->getLocaleInstances()) === 0) {
+            return;
+        }
+
+        unset($flags['archived']);
     }
 
     /**
