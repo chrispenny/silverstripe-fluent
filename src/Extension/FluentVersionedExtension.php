@@ -690,35 +690,6 @@ SQL;
     }
 
     /**
-     * Localise latest version lookup
-     * Extension point in @see Versioned::get_latest_version()
-     *
-     * @param DataObject|null $latest
-     * @param DataObject|string $class
-     * @param int $id
-     */
-    public function updateGetLatestVersion(&$latest, $class, $id)
-    {
-        $locale = FluentState::singleton()->getLocale();
-
-        if (!$locale) {
-            return;
-        }
-
-        /** @var Versioned $versioned */
-        $versioned = singleton(Versioned::class);
-        $version = $versioned::get_versionnumber_by_stage($class, Versioned::DRAFT, $id);
-
-        if (!$version) {
-            $latest = null;
-
-            return;
-        }
-
-        $latest = $versioned::get_version($class, $id, $version);
-    }
-
-    /**
      * Localise version lookup
      * Extension point in @see Versioned::get_versionnumber_by_stage()
      *
