@@ -204,6 +204,20 @@ class FluentVersionedExtension extends FluentExtension implements Resettable
             // Add the chain of locale fallbacks
             $this->addLocaleFallbackChain($query, $tableName, $locale);
         }
+
+        // narrow down the list of versions down to only those which are related to current locale
+        $class = $this->owner->ClassName;
+        $schema = DataObject::getSchema();
+        $baseClass = $schema->baseDataClass($class);
+        $baseTable = $schema->tableName($baseClass);
+
+        /** @var DataObject|FluentExtension $singleton */
+        $singleton = DataObject::singleton($class);
+
+        $localisedTable = $singleton->getLocalisedTable($baseTable);
+        $localisedAlias = sprintf('%s_%s', $localisedTable, $locale->Locale);
+
+        $query->addWhere([sprintf('"%s"."Locale" = ?', $localisedAlias) => $locale->Locale]);
     }
 
     /**
@@ -694,7 +708,7 @@ SQL;
     }
 
     /**
-     * Localise latest version lookup
+     * Localise max version lookup
      * Extension point in @see Versioned::prepareMaxVersionSubSelect()
      *
      * @param SQLSelect $subSelect
