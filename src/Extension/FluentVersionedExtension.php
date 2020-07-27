@@ -690,6 +690,48 @@ SQL;
     }
 
     /**
+     * Localise latest version lookup
+     * Extension point in @see Versioned::prepareMaxVersionSubSelect()
+     *
+     * @param SQLSelect $subSelect
+     * @param DataQuery $dataQuery
+     * @param bool $shouldApplySubSelectAsCondition
+     */
+    public function augmentMaxVersionSubSelect(
+        SQLSelect $subSelect,
+        DataQuery $dataQuery,
+        bool $shouldApplySubSelectAsCondition
+    ) {
+        $locale = FluentState::singleton()->getLocale();
+
+        if (!$locale) {
+            return;
+        }
+
+        $owner = $this->owner;
+        $class = $owner->ClassName;
+
+        $baseClass = DataObject::getSchema()->baseDataClass($class);
+        $baseTable = DataObject::getSchema()->tableName($baseClass);
+        $localisedTable = $owner->getLocalisedTable($baseTable);
+        $localisedVersionTable = $localisedTable . static::SUFFIX_VERSIONS;
+        $alias = $baseTable . '_Versions_Latest';
+        $localisedAlias = $baseTable . '_Localised_Versions_Latest';
+
+        $subSelect
+            ->addInnerJoin(
+                $localisedVersionTable,
+                sprintf(
+                    '"%1$s"."RecordID" = "%2$s"."RecordID" AND "%1$s"."Version" = "%2$s"."Version"',
+                    $alias,
+                    $localisedAlias
+                ),
+                $localisedAlias
+            )
+            ->addWhere([sprintf('"%s"."Locale"', $localisedAlias) => $locale]);
+    }
+
+    /**
      * Localise version lookup
      * Extension point in @see Versioned::get_versionnumber_by_stage()
      *
