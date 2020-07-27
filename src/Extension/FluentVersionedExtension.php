@@ -376,9 +376,11 @@ class FluentVersionedExtension extends FluentExtension implements Resettable
             return false;
         }
 
+        $schema = DataObject::getSchema();
+        $baseClass = $schema->baseDataClass($class);
+        $stageTable = $schema->tableName($baseClass);
+
         $versionSuffix = FluentVersionedExtension::SUFFIX_VERSIONS;
-        $baseClass = DataObject::getSchema()->baseDataClass($class);
-        $stageTable = DataObject::getSchema()->tableName($baseClass);
         $liveTable = $stageTable . $versionSuffix;
         $stagedTable = $record->getLocalisedTable($stageTable) . $versionSuffix;
 
@@ -672,8 +674,10 @@ SQL;
         $class = $owner->ClassName;
         $id = $owner->ID ?: $owner->OldID;
 
-        $baseClass = DataObject::getSchema()->baseDataClass($class);
-        $baseTable = DataObject::getSchema()->tableName($baseClass);
+        $schema = DataObject::getSchema();
+        $baseClass = $schema->baseDataClass($class);
+        $baseTable = $schema->tableName($baseClass);
+
         $localisedTable = $owner->getLocalisedTable($baseTable);
         $localisedVersionTable = $localisedTable . static::SUFFIX_VERSIONS;
 
