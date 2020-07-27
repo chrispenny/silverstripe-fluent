@@ -711,8 +711,10 @@ SQL;
         $owner = $this->owner;
         $class = $owner->ClassName;
 
-        $baseClass = DataObject::getSchema()->baseDataClass($class);
-        $baseTable = DataObject::getSchema()->tableName($baseClass);
+        $schema = DataObject::getSchema();
+        $baseClass = $schema->baseDataClass($class);
+        $baseTable = $schema->tableName($baseClass);
+
         $localisedTable = $owner->getLocalisedTable($baseTable);
         $localisedVersionTable = $localisedTable . static::SUFFIX_VERSIONS;
         $alias = $baseTable . '_Versions_Latest';
@@ -749,12 +751,13 @@ SQL;
             return;
         }
 
+        $schema = DataObject::getSchema();
+        $baseClass = $schema->baseDataClass($class);
+        $baseTable = $schema->tableName($baseClass);
         $className = $class instanceof DataObject ? $class->ClassName : $class;
 
         /** @var DataObject|FluentExtension $singleton */
         $singleton = DataObject::singleton($className);
-        $baseClass = DataObject::getSchema()->baseDataClass($class);
-        $baseTable = DataObject::getSchema()->tableName($baseClass);
         $versionedTable = $baseTable . static::SUFFIX_VERSIONS;
         $localisedTable = $singleton->getLocalisedTable($baseTable);
         $localisedVersionTable = $localisedTable . static::SUFFIX_VERSIONS;
@@ -821,6 +824,7 @@ SQL;
         if (isset($this->versionsCache[$class][$stage][$locale][static::CACHE_COMPLETE])) {
             // if the cache was marked as "complete" then we know the record is missing, just return null
             // this is used for treeview optimisation to avoid unnecessary re-requests for draft pages
+            // TODO this feature is not implemented yet, we need to localise prepopulate_versionnumber_cache()
             return null;
         }
 

@@ -284,17 +284,6 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
     {
         $owner = $this->owner;
 
-        if (count($owner->getLocaleInstances()) === 0) {
-            if ($owner->hasArchiveInLocale()) {
-                return _t(
-                    'SilverStripe\\CMS\\Model\\SiteTree.ARCHIVEDPAGEHELP',
-                    'Page is removed from draft and live'
-                );
-            }
-
-            return _t(__CLASS__ . '.LOCALESTATUSFLUENTARCHIVED', 'This page was archived in another locale.');
-        }
-
         if ($owner->config()->get('frontend_publish_required')) {
             // If publishing is required, then we can just check whether or not this locale has been published.
             if (!$this->isPublishedInLocale()) {
@@ -309,7 +298,8 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
 
         // If frontend publishing is *not* required, then we have multiple possibilities.
         if (!$this->isDraftedInLocale()) {
-            $info = RecordLocale::create($owner, Locale::getCurrentLocale());
+            $locale = FluentState::singleton()->getLocale();
+            $info = $owner->LocaleInformation($locale);
 
             // Our content hasn't been drafted or published.
             if ($info->getSourceLocale()) {
@@ -319,6 +309,17 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
                     'Content for this page may be inherited from another locale. If you wish you make an ' .
                     'independent copy of this page, please use one of the "Copy" actions provided.'
                 );
+            }
+
+            if (!$owner->getLocaleInstances()) {
+                if ($owner->hasArchiveInLocale()) {
+                    return _t(
+                        'SilverStripe\\CMS\\Model\\SiteTree.ARCHIVEDPAGEHELP',
+                        'Page is removed from draft and live'
+                    );
+                }
+
+                return _t(__CLASS__ . '.LOCALESTATUSFLUENTARCHIVED', 'This page was archived in another locale.');
             }
 
             // This locale doesn't have any content source
@@ -526,11 +527,13 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
      */
     protected function updateRestoreAction(FieldList $actions): void
     {
-        if ($this->owner->existsInLocale()) {
+        $owner = $this->owner;
+
+        if ($owner->existsInLocale()) {
             return;
         }
 
-        if ($this->owner->hasArchiveInLocale()) {
+        if ($owner->hasArchiveInLocale()) {
             return;
         }
 
@@ -639,7 +642,7 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
             return;
         }
 
-        if (count($this->owner->getLocaleInstances()) === 0) {
+        if (!$this->owner->getLocaleInstances()) {
             return;
         }
 
