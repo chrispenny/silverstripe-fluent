@@ -919,6 +919,30 @@ class FluentExtension extends DataExtension
     }
 
     /**
+     * Check if base record exists
+     * this is useful in situations where we have to consider pre-Fluent state
+     * this happens when project adds Fluent module later in the development so we end up with a bunch of objects
+     * which have base record only but are not archived
+     *
+     * @return bool
+     */
+    public function hasBaseRecord(): bool
+    {
+        return FluentState::singleton()->withState(function (FluentState $state): bool {
+            $state->setLocale(null);
+
+            $owner = $this->owner;
+            $object = DataObject::get_by_id($owner->ClassName, $owner->ID);
+
+            if ($object === null || !$object->exists()) {
+                return false;
+            }
+
+            return true;
+        });
+    }
+
+    /**
      * Return the linking mode for the current locale and object
      *
      * @param string $locale

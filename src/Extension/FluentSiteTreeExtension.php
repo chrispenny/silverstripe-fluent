@@ -311,7 +311,7 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
                 );
             }
 
-            if (!$owner->getLocaleInstances()) {
+            if (!$owner->hasBaseRecord() && !$owner->getLocaleInstances()) {
                 if ($owner->hasArchiveInLocale()) {
                     return _t(
                         'SilverStripe\\CMS\\Model\\SiteTree.ARCHIVEDPAGEHELP',
@@ -681,6 +681,10 @@ class FluentSiteTreeExtension extends FluentVersionedExtension
                 'title' => 'This page exists in a different locale but the content is not inherited',
             ];
 
+            return;
+        }
+
+        if ($owner->hasBaseRecord()) {
             return;
         }
 
